@@ -13,12 +13,16 @@
 		00B784B40FF439BC000DE1D7 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B00FF439BC000DE1D7 /* AudioToolbox.framework */; };
 		00B784B50FF439BC000DE1D7 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B10FF439BC000DE1D7 /* AudioUnit.framework */; };
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
-		00BAE65A0E7ED9C10018A608 /* FlockingApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00BAE6590E7ED9C10018A608 /* FlockingApp.cpp */; };
+		00BAE65A0E7ED9C10018A608 /* RepulsionApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00BAE6590E7ED9C10018A608 /* RepulsionApp.cpp */; };
 		00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 00CCAF14116A9FEE008396D5 /* CinderApp.icns */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		53E3CDFC0E86099300238D2B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53E3CDFB0E86099300238D2B /* Carbon.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		E111BF1D154B9411002C7812 /* fboInit.frag in Resources */ = {isa = PBXBuildFile; fileRef = E111BF1C154B9411002C7812 /* fboInit.frag */; };
+		E11EB1DB154A597F0083EB74 /* glow.png in Resources */ = {isa = PBXBuildFile; fileRef = E11EB1DA154A597F0083EB74 /* glow.png */; };
+		E11EB1F0154A60AA0083EB74 /* Controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E11EB1EF154A60AA0083EB74 /* Controller.cpp */; };
+		E11EB1F3154A61000083EB74 /* Bait.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E11EB1F2154A61000083EB74 /* Bait.cpp */; };
 		E149FFE7154916C2007C6AE9 /* HodginUtility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E149FFE5154916C2007C6AE9 /* HodginUtility.cpp */; };
 		E149FFE8154916C2007C6AE9 /* Room.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E149FFE6154916C2007C6AE9 /* Room.cpp */; };
 		E149FFEA15491741007C6AE9 /* roomPanel.png in Resources */ = {isa = PBXBuildFile; fileRef = E149FFE915491741007C6AE9 /* roomPanel.png */; };
@@ -26,6 +30,7 @@
 		E149FFEF15491867007C6AE9 /* room.vert in Resources */ = {isa = PBXBuildFile; fileRef = E149FFED15491867007C6AE9 /* room.vert */; };
 		E149FFF2154919F0007C6AE9 /* SpringCam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E149FFF1154919F0007C6AE9 /* SpringCam.cpp */; };
 		E18830CF153932DE00D2B8B7 /* Velocity.frag in Resources */ = {isa = PBXBuildFile; fileRef = E18830CD153932DE00D2B8B7 /* Velocity.frag */; };
+		E19BA863154B6EAD0058B83F /* Sample.glsl in Resources */ = {isa = PBXBuildFile; fileRef = E19BA862154B6EAD0058B83F /* Sample.glsl */; };
 		E1AE00E7153D0B02000CE780 /* passThru.vert in Resources */ = {isa = PBXBuildFile; fileRef = E1AE00E6153D0B02000CE780 /* passThru.vert */; };
 		E1AE00EC153D0C32000CE780 /* passThruNormals.vert in Resources */ = {isa = PBXBuildFile; fileRef = E1AE00EB153D0C32000CE780 /* passThruNormals.vert */; };
 		E1B9BD4715390ECD006F5214 /* VboPos.vert in Resources */ = {isa = PBXBuildFile; fileRef = E1B9BD4615390ECD006F5214 /* VboPos.vert */; };
@@ -40,18 +45,24 @@
 		00B784B00FF439BC000DE1D7 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		00B784B10FF439BC000DE1D7 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		00B784B20FF439BC000DE1D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		00BAE6590E7ED9C10018A608 /* FlockingApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FlockingApp.cpp; path = ../src/FlockingApp.cpp; sourceTree = SOURCE_ROOT; };
+		00BAE6590E7ED9C10018A608 /* RepulsionApp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RepulsionApp.cpp; path = ../src/RepulsionApp.cpp; sourceTree = SOURCE_ROOT; };
 		00CCAF14116A9FEE008396D5 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = SOURCE_ROOT; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		32CA4F630368D1EE00C91783 /* Flocking_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; path = Flocking_Prefix.pch; sourceTree = "<group>"; };
+		32CA4F630368D1EE00C91783 /* Repulsion_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Repulsion_Prefix.pch; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		53E3CDFB0E86099300238D2B /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8D1107320486CEB800E47090 /* GpuPhysics.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GpuPhysics.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D1107320486CEB800E47090 /* GpuPhysics.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = GpuPhysics.app; path = Repulsion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E111BF1C154B9411002C7812 /* fboInit.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = fboInit.frag; path = ../resources/fboInit.frag; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
+		E11EB1DA154A597F0083EB74 /* glow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = glow.png; path = ../resources/glow.png; sourceTree = "<group>"; };
+		E11EB1ED154A60660083EB74 /* Controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Controller.h; path = ../include/Controller.h; sourceTree = "<group>"; };
+		E11EB1EF154A60AA0083EB74 /* Controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Controller.cpp; path = ../src/Controller.cpp; sourceTree = "<group>"; };
+		E11EB1F1154A60E80083EB74 /* Bait.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Bait.h; path = ../include/Bait.h; sourceTree = "<group>"; };
+		E11EB1F2154A61000083EB74 /* Bait.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Bait.cpp; path = ../src/Bait.cpp; sourceTree = "<group>"; };
 		E149FFE2154916B4007C6AE9 /* HodginUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HodginUtility.h; path = ../include/HodginUtility.h; sourceTree = "<group>"; };
 		E149FFE3154916B4007C6AE9 /* Room.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Room.h; path = ../include/Room.h; sourceTree = "<group>"; };
 		E149FFE5154916C2007C6AE9 /* HodginUtility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HodginUtility.cpp; path = ../src/HodginUtility.cpp; sourceTree = "<group>"; };
@@ -62,6 +73,7 @@
 		E149FFF0154919E9007C6AE9 /* SpringCam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SpringCam.h; path = ../include/SpringCam.h; sourceTree = "<group>"; };
 		E149FFF1154919F0007C6AE9 /* SpringCam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SpringCam.cpp; path = ../src/SpringCam.cpp; sourceTree = "<group>"; };
 		E18830CD153932DE00D2B8B7 /* Velocity.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = Velocity.frag; path = ../resources/Velocity.frag; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
+		E19BA862154B6EAD0058B83F /* Sample.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = Sample.glsl; path = ../resources/Sample.glsl; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		E1AE00E6153D0B02000CE780 /* passThru.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = passThru.vert; path = ../resources/passThru.vert; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		E1AE00EB153D0C32000CE780 /* passThruNormals.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = passThruNormals.vert; path = ../resources/passThruNormals.vert; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		E1B9BD4615390ECD006F5214 /* VboPos.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = VboPos.vert; path = ../resources/VboPos.vert; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
@@ -93,10 +105,12 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				00BAE6590E7ED9C10018A608 /* FlockingApp.cpp */,
+				00BAE6590E7ED9C10018A608 /* RepulsionApp.cpp */,
 				E149FFE5154916C2007C6AE9 /* HodginUtility.cpp */,
 				E149FFF1154919F0007C6AE9 /* SpringCam.cpp */,
 				E149FFE6154916C2007C6AE9 /* Room.cpp */,
+				E11EB1EF154A60AA0083EB74 /* Controller.cpp */,
+				E11EB1F2154A61000083EB74 /* Bait.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -151,10 +165,12 @@
 		29B97315FDCFA39411CA2CEA /* Headers */ = {
 			isa = PBXGroup;
 			children = (
-				32CA4F630368D1EE00C91783 /* Flocking_Prefix.pch */,
+				32CA4F630368D1EE00C91783 /* Repulsion_Prefix.pch */,
 				E149FFE2154916B4007C6AE9 /* HodginUtility.h */,
 				E149FFF0154919E9007C6AE9 /* SpringCam.h */,
 				E149FFE3154916B4007C6AE9 /* Room.h */,
+				E11EB1ED154A60660083EB74 /* Controller.h */,
+				E11EB1F1154A60E80083EB74 /* Bait.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -164,6 +180,7 @@
 			children = (
 				E149FFEB15491744007C6AE9 /* Shaders */,
 				E149FFE915491741007C6AE9 /* roomPanel.png */,
+				E11EB1DA154A597F0083EB74 /* glow.png */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				00CCAF14116A9FEE008396D5 /* CinderApp.icns */,
 			);
@@ -182,6 +199,7 @@
 		E149FFEB15491744007C6AE9 /* Shaders */ = {
 			isa = PBXGroup;
 			children = (
+				E111BF1C154B9411002C7812 /* fboInit.frag */,
 				E149FFED15491867007C6AE9 /* room.vert */,
 				E149FFEC15491867007C6AE9 /* room.frag */,
 				E1AE00E6153D0B02000CE780 /* passThru.vert */,
@@ -190,6 +208,7 @@
 				E1B9BD4F1539151E006F5214 /* Position.frag */,
 				E1B9BD4615390ECD006F5214 /* VboPos.vert */,
 				E1B9BD4915390ED9006F5214 /* VboPos.frag */,
+				E19BA862154B6EAD0058B83F /* Sample.glsl */,
 			);
 			name = Shaders;
 			sourceTree = "<group>";
@@ -197,9 +216,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D1107260486CEB800E47090 /* Flocking */ = {
+		8D1107260486CEB800E47090 /* Repulsion */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Flocking" */;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Repulsion" */;
 			buildPhases = (
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
@@ -209,7 +228,7 @@
 			);
 			dependencies = (
 			);
-			name = Flocking;
+			name = Repulsion;
 			productInstallPath = "$(HOME)/Applications";
 			productName = GpuPhysics;
 			productReference = 8D1107320486CEB800E47090 /* GpuPhysics.app */;
@@ -221,9 +240,9 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 			};
-			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Flocking" */;
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Repulsion" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -234,7 +253,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D1107260486CEB800E47090 /* Flocking */,
+				8D1107260486CEB800E47090 /* Repulsion */,
 			);
 		};
 /* End PBXProject section */
@@ -244,6 +263,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E111BF1D154B9411002C7812 /* fboInit.frag in Resources */,
 				00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */,
 				E18830CF153932DE00D2B8B7 /* Velocity.frag in Resources */,
 				E1B9BD501539151E006F5214 /* Position.frag in Resources */,
@@ -254,6 +274,8 @@
 				E1AE00E7153D0B02000CE780 /* passThru.vert in Resources */,
 				E1AE00EC153D0C32000CE780 /* passThruNormals.vert in Resources */,
 				E149FFEA15491741007C6AE9 /* roomPanel.png in Resources */,
+				E11EB1DB154A597F0083EB74 /* glow.png in Resources */,
+				E19BA863154B6EAD0058B83F /* Sample.glsl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,10 +286,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				00BAE65A0E7ED9C10018A608 /* FlockingApp.cpp in Sources */,
+				00BAE65A0E7ED9C10018A608 /* RepulsionApp.cpp in Sources */,
 				E149FFE7154916C2007C6AE9 /* HodginUtility.cpp in Sources */,
 				E149FFE8154916C2007C6AE9 /* Room.cpp in Sources */,
 				E149FFF2154919F0007C6AE9 /* SpringCam.cpp in Sources */,
+				E11EB1F0154A60AA0083EB74 /* Controller.cpp in Sources */,
+				E11EB1F3154A61000083EB74 /* Bait.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,12 +307,12 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Flocking_Prefix.pch;
+				GCC_PREFIX_HEADER = Repulsion_Prefix.pch;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/libcinder_d.a\"";
-				PRODUCT_NAME = Flocking;
+				PRODUCT_NAME = Repulsion;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -304,12 +328,12 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Flocking_Prefix.pch;
+				GCC_PREFIX_HEADER = Repulsion_Prefix.pch;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/libcinder.a\"";
-				PRODUCT_NAME = Flocking;
+				PRODUCT_NAME = Repulsion;
 				STRIP_INSTALLED_PRODUCT = YES;
 				WRAPPER_EXTENSION = app;
 			};
@@ -348,7 +372,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Flocking" */ = {
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Repulsion" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4B08A954540054247B /* Debug */,
@@ -357,7 +381,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Flocking" */ = {
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Repulsion" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4F08A954540054247B /* Debug */,

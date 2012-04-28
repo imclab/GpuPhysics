@@ -7,6 +7,8 @@
 //
 
 #include "cinder/app/AppBasic.h"
+#include "cinder/Rand.h"
+#include "cinder/gl/Texture.h"
 #include "Room.h"
 
 using namespace ci;
@@ -15,8 +17,8 @@ Room::Room()
 {
 }
 
-Room::Room(  float xb, float yb, float zb )
-	: mXBounds( xb ), mYBounds( yb ), mZBounds( zb )
+Room::Room( const Vec3f &bounds )
+: mBounds( bounds )
 {	
 }
 
@@ -109,19 +111,35 @@ void Room::init()
 	mVbo.bufferTexCoords2d( 0, texCoords );
 }
 
-void Room::update( float xb, float yb, float zb )
+void Room::update( const Vec3f &bounds )
 {
-	float newXb = xb;
-	float newYb = yb;
-	float newZb = zb;
-	
-	mXBounds -= ( mXBounds - newXb ) * 0.1f;
-	mYBounds -= ( mYBounds - newYb ) * 0.1f;
-	mZBounds -= ( mZBounds - newZb ) * 0.1f;
+	mBounds -= ( mBounds - bounds ) * 0.1f;
 }
 
 void Room::draw()
 {
 	gl::draw( mVbo );
+}
+
+void Room::drawPanel( const gl::Texture &tex )
+{
+	float texHeight = tex.getHeight() * 0.35f;
+	gl::pushModelView();
+	gl::translate( Vec3f( mBounds.x, -mBounds.y + texHeight, mBounds.z + 1.0f ) );
+	gl::scale( Vec3f( -1.0f, -1.0f, 1.0f ) * 0.25f );
+	gl::draw( tex, Vec2f::zero() );
+	gl::popModelView();
+}
+
+Vec3f Room::getRandCeilingPos()
+{
+	return Vec3f( Rand::randFloat( -getBounds().x * 0.8f, getBounds().x * 0.8f ), 
+				  getBounds().y, 
+				  Rand::randFloat( -getBounds().z * 0.5f, getBounds().z * 0.5f ) );
+}
+
+float Room::getFloorLevel()
+{
+	return -getBounds().y;
 }
 

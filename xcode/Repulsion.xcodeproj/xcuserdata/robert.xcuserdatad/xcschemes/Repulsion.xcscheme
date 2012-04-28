@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   version = "1.3">
+   LastUpgradeVersion = "0430"
+   version = "1.8">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
@@ -14,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "Flocking.app"
-               BlueprintName = "Flocking"
-               ReferencedContainer = "container:Flocking.xcodeproj">
+               BuildableName = "Repulsion.app"
+               BlueprintName = "Repulsion"
+               ReferencedContainer = "container:Repulsion.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,28 +33,27 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "Flocking.app"
-            BlueprintName = "Flocking"
-            ReferencedContainer = "container:Flocking.xcodeproj">
+            BuildableName = "Repulsion.app"
+            BlueprintName = "Repulsion"
+            ReferencedContainer = "container:Repulsion.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
    <LaunchAction
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.GDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.GDB"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
-      ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "Flocking.app"
-            BlueprintName = "Flocking"
-            ReferencedContainer = "container:Flocking.xcodeproj">
+            BuildableName = "Repulsion.app"
+            BlueprintName = "Repulsion"
+            ReferencedContainer = "container:Repulsion.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -69,9 +69,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "Flocking.app"
-            BlueprintName = "Flocking"
-            ReferencedContainer = "container:Flocking.xcodeproj">
+            BuildableName = "Repulsion.app"
+            BlueprintName = "Repulsion"
+            ReferencedContainer = "container:Repulsion.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

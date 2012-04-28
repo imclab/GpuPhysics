@@ -13,17 +13,17 @@ class Room
 {
   public:
 	Room();
-	Room( float xb, float yb, float zb );
+	Room( const ci::Vec3f &bounds );
 	void init();
-	void update( float xb, float yb, float zb );
+	void update( const ci::Vec3f &bounds );
 	void draw();
-	void setBounds( float xb, float yb, float zb ){ mXBounds = xb; mYBounds = yb; mZBounds = zb; };
-	ci::Vec3f getBounds(){ return ci::Vec3f( mXBounds, mYBounds, mZBounds ); };
+	void drawPanel( const ci::gl::Texture &tex );
+	void setBounds( const ci::Vec3f &bounds ){ mBounds = bounds; };
+	ci::Vec3f getBounds(){ return mBounds; };
+	ci::Vec3f getRandCeilingPos();
+	float getFloorLevel();
 	
 	ci::gl::VboMesh mVbo;
-	
-	float mXBounds;
-	float mYBounds;
-	float mZBounds;
+	ci::Vec3f mBounds;
 
 };

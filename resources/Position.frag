@@ -1,17 +1,26 @@
 #version 110
-uniform sampler2D position;
-uniform sampler2D velocity;
+uniform sampler2D pos0Tex;
+uniform sampler2D pos1Tex;
+uniform sampler2D vel0Tex;
+uniform sampler2D vel1Tex;
 uniform float timeDelta;
+
+// POSITION RGB
+// RADIUS	A
 
 void main()
 {	
-	vec4 vPos			= texture2D( position, gl_TexCoord[0].st );
-	vec4 vVel			= texture2D( velocity, gl_TexCoord[0].st );
+	vec4 vPos0			= texture2D( pos0Tex, gl_TexCoord[0].st );
+	vec4 vPos1			= texture2D( pos1Tex, gl_TexCoord[0].st );
+	vec4 vVel0			= texture2D( vel0Tex, gl_TexCoord[0].st );
+	vec4 vVel1			= texture2D( vel1Tex, gl_TexCoord[0].st );
 	
-	vec3 newPos			= vPos.xyz + ( ( vVel.xyz ) * ( vVel.a * 0.05 ) * timeDelta );
-//	if( length( newPos ) > boundingRadius )
-//		newPos = normalize( newPos ) * ( boundingRadius );
+	vec3 newPos			= vPos0.xyz + ( vVel0.xyz * timeDelta );
+	newPos += vVel1.xyz;
 	
-	gl_FragColor.rgb	= newPos;
-	gl_FragColor.a		= vPos.a;//vVel.a;
+	float radius		= vPos0.a;
+	radius += vVel1.a;
+	
+	gl_FragData[0]		= vec4( newPos, radius );
+	gl_FragData[1]		= vPos1;
 }
