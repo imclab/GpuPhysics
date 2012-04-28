@@ -9,90 +9,51 @@
 #include "cinder/Camera.h"
 #include "cinder/Rand.h"
 #include "cinder/params/Params.h"
-#include "Room.h"
-#include "Controller.h"
-#include "Bait.h"
-#include "SpringCam.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
-using std::sort;
-
 
 #define APP_WIDTH		1280
 #define APP_HEIGHT		720
-#define FBO_WIDTH		4	// THIS
-#define FBO_HEIGHT		4	// TIMES THIS IS THE NUMBER OF FLOCKING AGENTS
-#define ROOM_FBO_RES	2
-#define MAX_LIGHTS		3
 
-class RepulsionApp : public AppBasic {
+#define FBO_WIDTH		5
+#define FBO_HEIGHT		5
+
+class GpuPhysicsApp : public AppBasic {
   public:
-	
-	
 	void prepareSettings( Settings *settings );
 	void setup();
-	void setFboPositions( gl::Fbo &fbo );
-	void setFboVelocities( gl::Fbo &fbo );
+	void setInitPositions( gl::Fbo &fbo );
+	void setInitVelocities( gl::Fbo &fbo );
 	void createSphere( gl::VboMesh &mesh, int res );
 	void drawSphereTri( Vec3f va, Vec3f vb, Vec3f vc, int div, Color c );
-	void mouseDown( MouseEvent event );
-	void mouseUp( MouseEvent event );
-	void mouseDrag( MouseEvent event );
 	void keyDown( KeyEvent event );
-	void updateTime();
 	void update();
-	void drawIntoRoomFbo();
 	void drawIntoVelocityFbo();
 	void drawIntoPositionFbo();
 	void draw();
-	void drawToLightsSurface();
-	
-	// PARAMS
-	params::InterfaceGl	mParams;
 
 	// TIME
 	float			mTime, mTimePrev;
-	float			mTimer;
 	float			mTimeDelta;
-	float			mTimeAdjusted;
-	float			mTimeMulti;
-	
-	Controller		mController;
-	
-	// POINT LIGHTS
-	int				mNumLights;
-	float			mInvNumLights;
-	Surface32f		mLightsSurface;
-	gl::Texture		mLightsTex;
-	
+
 	// CAMERA
-	SpringCam		mSpringCam;
+	CameraPersp		mCam;
 	
 	// SHADERS
-	gl::GlslProg	mVelocityShader;
-	gl::GlslProg	mPositionShader;
-	gl::GlslProg	mRoomShader;
-	gl::GlslProg	mShader;
-	gl::GlslProg	mFboInitShader;
-	
-	// TEXTURES
-	gl::Texture		mRoomPanelTex;
-	gl::Texture		mGlowTex;
-	
-	// ROOM
-	Room			mRoom;
-	gl::Fbo			mRoomFbo;
-	ci::Vec2f		mRoomFboSize;
-	ci::Area		mRoomFboBounds;
-	Rectf			mRoomPanelRect;
-	
-	gl::VboMesh			mSphereVbo;
-	std::vector<Vec3f>	mPosCoords;
-	std::vector<Vec3f>	mNormals;
-	std::vector<Vec2f>	mTexCoords;
-	std::vector<Colorf>	mColors;
+	gl::GlslProg	mPosInitShader;		// Used to initialize the Position FBO data
+	gl::GlslProg	mVelInitShader;		// Used to initialize the Velocity FBO data
+	gl::GlslProg	mVelocityShader;	// Used to calculate the new velocities
+	gl::GlslProg	mPositionShader;	// Used to calculate the new positions
+	gl::GlslProg	mShader;			// Draws particles to screen
+
+	// SPHERES
+	gl::VboMesh			mSphereVbo;		// Stores the data for all the spheres
+	std::vector<Vec3f>	mPosCoords;		// Vertex positions
+	std::vector<Vec3f>	mNormals;		// Vertex normals
+	std::vector<Vec2f>	mTexCoords;		// Sphere texture coords, not currently being used
+	std::vector<Colorf>	mColors;		// Holds the U,V data for where to access FBO data
 	
 	// POSITION/VELOCITY FBOS
 	ci::Vec2f		mFboSize;
@@ -101,48 +62,42 @@ class RepulsionApp : public AppBasic {
 	gl::Fbo			mVelocityFbos[2];
 	int				mThisFbo, mPrevFbo;
 	
-	float			mMainPower;
-	bool			mIsPowerOn;
-	float			mGravity;
 	bool			mIsGravityOn;
+	float			mGravity;
 	
-	bool			mShowParams;
-	float			mMinThresh, mMaxThresh;
-	float			mZoneRadius;
-	float			mMinSpeed, mMaxSpeed;
-	
-	Vec2f			mMousePos;
-	float			mMousePressed;
-	
-	bool			mSaveFrames;
-	int				mNumFrames;
+	float			mCharge;
 };
 
-void RepulsionApp::prepareSettings( Settings *settings )
+void GpuPhysicsApp::prepareSettings( Settings *settings )
 {
 	settings->setWindowSize( APP_WIDTH, APP_HEIGHT );
 }
 
-void RepulsionApp::setup()
+void GpuPhysicsApp::setup()
 {
-	createSphere( mSphereVbo, 2 );
+	// SPHERES VBO
+	createSphere( mSphereVbo, 3 );
 	
 	// TIME
 	mTimePrev	= (float)getElapsedSeconds();
 	mTime		= (float)getElapsedSeconds();
 	mTimeDelta	= mTime - mTimePrev;
-	mTimeMulti	= 120.0f;
 	
 	// CAMERA	
-	mSpringCam		= SpringCam( -188.0f, getWindowAspectRatio() );
+	mCam.setPerspective( 65.0f, getWindowAspectRatio(), 5.0f, 3000.0f );
+	mCam.lookAt( Vec3f( 0.0f, 0.0f, -200.0f ), Vec3f::zero(), Vec3f::yAxis() );
 	
-	// POINT LIGHTS
-	mNumLights			= MAX_LIGHTS;
-	mInvNumLights		= 1.0f/(float)mNumLights;
-	gl::Texture::Format hdTexFormat;
-	hdTexFormat.setInternalFormat( GL_RGB32F_ARB );
-	mLightsTex			= gl::Texture( mNumLights, 2, hdTexFormat );
-	mLightsSurface		= Surface32f( mNumLights, 2, false );
+	// SHADERS
+	try {
+		mVelocityShader = gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "Velocity.frag" ) );
+		mPositionShader	= gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "Position.frag" ) );
+		mShader			= gl::GlslProg( loadResource( "final.vert" ), loadResource( "final.frag" ) );
+		mPosInitShader	= gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "fboPosInit.frag" ) );
+		mVelInitShader	= gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "fboVelInit.frag" ) );
+	} catch( gl::GlslProgCompileExc e ) {
+		std::cout << e.what() << std::endl;
+		quit();
+	}
 	
 	// POSITION/VELOCITY FBOS
 	gl::Fbo::Format format;
@@ -150,81 +105,29 @@ void RepulsionApp::setup()
 	format.setColorInternalFormat( GL_RGBA16F_ARB );
 	format.setMinFilter( GL_NEAREST );
 	format.setMagFilter( GL_NEAREST );
-	mFboSize		= Vec2f( FBO_WIDTH, FBO_HEIGHT );
-	mFboBounds		= Area( 0, 0, FBO_WIDTH, FBO_HEIGHT );
+	mFboSize			= Vec2f( FBO_WIDTH, FBO_HEIGHT );
+	mFboBounds			= Area( 0, 0, FBO_WIDTH, FBO_HEIGHT );
 	mPositionFbos[0]	= gl::Fbo( FBO_WIDTH, FBO_HEIGHT, format );
 	mPositionFbos[1]	= gl::Fbo( FBO_WIDTH, FBO_HEIGHT, format );
 	mVelocityFbos[0]	= gl::Fbo( FBO_WIDTH, FBO_HEIGHT, format );
 	mVelocityFbos[1]	= gl::Fbo( FBO_WIDTH, FBO_HEIGHT, format );
 	
-	mThisFbo	= 0;
-	mPrevFbo	= 1;
+	mThisFbo		= 0;
+	mPrevFbo		= 1;
 
-	// SHADERS
-	try {
-		mVelocityShader = gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "Velocity.frag" ) );
-		mPositionShader	= gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "Position.frag" ) );
-		mShader			= gl::GlslProg( loadResource( "VboPos.vert" ), loadResource( "VboPos.frag" ) );
-		mRoomShader		= gl::GlslProg( loadResource( "room.vert" ), loadResource( "room.frag" ) );
-		mFboInitShader	= gl::GlslProg( loadResource( "passThru.vert" ), loadResource( "fboInit.frag" ) );
-	} catch( gl::GlslProgCompileExc e ) {
-		std::cout << e.what() << std::endl;
-		quit();
-	}
+	mIsGravityOn	= false;
+	mGravity		= 0.0f;
+	mCharge			= 1.0f;
 	
-	// TEXTURES
-	mRoomPanelTex	= gl::Texture( loadImage( loadResource( "roomPanel.png" ) ) );
-	mGlowTex		= gl::Texture( loadImage( loadResource( "glow.png" ) ) );
-	
-	// ROOM
-	gl::Fbo::Format roomFormat;
-	format.setColorInternalFormat( GL_RGB );
-	int fboXRes		= APP_WIDTH/ROOM_FBO_RES;
-	int fboYRes		= APP_HEIGHT/ROOM_FBO_RES;
-	mRoomFboSize	= Vec2f( fboXRes, fboYRes );
-	mRoomFboBounds	= Area( 0, 0, fboXRes, fboYRes );
-	mRoomFbo		= gl::Fbo( fboXRes, fboYRes, roomFormat );
-	mRoomPanelRect	= Rectf( 32.0f, 35.0f, 32.0f + mRoomPanelTex.getWidth(), 35.0f - mRoomPanelTex.getHeight() );
-	mRoom			= Room( Vec3f( 155.0f, 88.0f, 50.0f ) );	
-	
-	mShowParams = false;
-	mZoneRadius = 20.0f;
-	mMinThresh	= 0.14f;
-	mMaxThresh	= 0.90f;
-	mMinSpeed	= 0.4f;
-	mMaxSpeed	= 10.1f;
-	
-	mMainPower	= 0.0f;
-	mIsPowerOn	= false;
-	
-	mGravity	= 0.0f;
-	mIsGravityOn= false;
-	
-	mMousePos	= Vec2f::zero();
-	mMousePressed = 0.0f;
-
-	
-	setFboPositions( mPositionFbos[0] );
-	setFboPositions( mPositionFbos[1] );
-	setFboVelocities( mVelocityFbos[0] );
-	setFboVelocities( mVelocityFbos[1] );
-
-	mParams = params::InterfaceGl( "Flocking", Vec2i( 200, 150 ) );
-	mParams.addParam( "Time Multi", &mTimeMulti, "min=0.0 max=180.0 step=1.0 keyIncr=t keyDecr=T" );
-	mParams.addParam( "Zone Radius", &mZoneRadius, "min=2.0 max=30.0 step=0.1 keyIncr=z keyDecr=Z" );
-	mParams.addParam( "Min Thresh", &mMinThresh, "min=0.025 max=1.0 step=0.01 keyIncr=l keyDecr=L" );
-	mParams.addParam( "Max Thresh", &mMaxThresh, "min=0.025 max=1.0 step=0.01 keyIncr=h keyDecr=H" );
-	mParams.addParam( "Min Speed", &mMinSpeed, "min=0.1 max=1.0 step=0.025" );
-	mParams.addParam( "Max Speed", &mMaxSpeed, "min=0.5 max=4.0 step=0.025" );
-	
-	mSaveFrames	= false;
-	mNumFrames	= 0;
-	
-	
-	mRoom.init();
+	// Initialize the position and velocity fbos
+	setInitPositions( mPositionFbos[0] );
+	setInitPositions( mPositionFbos[1] );
+	setInitVelocities( mVelocityFbos[0] );
+	setInitVelocities( mVelocityFbos[1] );
 }
 
-void RepulsionApp::createSphere( gl::VboMesh &vbo, int res )
+// createSphere and drawSphereTri creates a recursive subdivided icosahedron
+void GpuPhysicsApp::createSphere( gl::VboMesh &vbo, int res )
 {
 	float X = 0.525731112119f; 
 	float Z = 0.850650808352f;
@@ -238,17 +141,13 @@ void RepulsionApp::createSphere( gl::VboMesh &vbo, int res )
 		{0,4,1}, {0,9,4}, {9,5,4}, {4,5,8}, {4,8,1}, {8,10,1}, {8,3,10}, {5,3,8}, {5,2,3}, {2,7,3},
 		{7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6}, {6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11} };
 	
-	gl::VboMesh::Layout layout;
-	layout.setStaticPositions();
-	layout.setStaticNormals();
-	layout.setStaticTexCoords2d();
-	layout.setStaticColorsRGB();
-	
 	mPosCoords.clear();
 	mNormals.clear();
 	mTexCoords.clear();
 	mColors.clear();
 	
+	// Creates a unit sphere located at the origin for each fbo pixel.
+	// The verts get moved to the desired location in the final.vert shader.
 	float invWidth = 1.0f/(float)FBO_WIDTH;
 	float invHeight = 1.0f/(float)FBO_HEIGHT;
 	for( int x = 0; x < FBO_WIDTH; ++x ) {
@@ -262,6 +161,12 @@ void RepulsionApp::createSphere( gl::VboMesh &vbo, int res )
 			}
 		}
 	}
+	gl::VboMesh::Layout layout;
+	layout.setStaticPositions();
+	layout.setStaticNormals();
+	layout.setStaticTexCoords2d();
+	layout.setStaticColorsRGB();
+	
 	vbo = gl::VboMesh( mPosCoords.size(), 0, layout, GL_TRIANGLES );	
 	vbo.bufferPositions( mPosCoords );
 	vbo.bufferNormals( mNormals );
@@ -270,7 +175,7 @@ void RepulsionApp::createSphere( gl::VboMesh &vbo, int res )
 	vbo.unbindBuffers();
 }
 
-void RepulsionApp::drawSphereTri( Vec3f va, Vec3f vb, Vec3f vc, int div, Color c )
+void GpuPhysicsApp::drawSphereTri( Vec3f va, Vec3f vb, Vec3f vc, int div, Color c )
 {
 	if( div <= 0 ){
 		mColors.push_back( c );
@@ -325,339 +230,178 @@ void RepulsionApp::drawSphereTri( Vec3f va, Vec3f vb, Vec3f vc, int div, Color c
 	}
 }
 
-void RepulsionApp::setFboPositions( gl::Fbo &fbo )
+void GpuPhysicsApp::setInitPositions( gl::Fbo &fbo )
 {
-	Surface32f pos( fbo.getTexture() );
-	Surface32f::Iter it = pos.getIter();
+	// Give each pixel on the surface a randomized rgb value
+	// which will represent the particle position.
+	// Store the mass of the particle as the alpha value.
+	Surface32f posSurface( fbo.getTexture() );
+	Surface32f::Iter it = posSurface.getIter();
 	while( it.line() ){
 		while( it.pixel() ){
-			Vec3f r = Vec3f( Rand::randFloat( -mRoom.getBounds().x, mRoom.getBounds().x ), 
-							 Rand::randFloat( -mRoom.getBounds().y, mRoom.getBounds().y ),
-							 Rand::randFloat( -mRoom.getBounds().z, mRoom.getBounds().z ) ) * 0.9f;
-			float radius = Rand::randFloat( 1.5f, 4.0f );
-			if( Rand::randFloat() < 0.05f ) 
-				radius = Rand::randFloat( 6.0f, 12.0f );
-			it.r() = r.x;
-			it.g() = r.y;
-			it.b() = r.z;
-			it.a() = radius;
+			Vec3f initPos	= Rand::randVec3f() * 50.0f;
+			float initMass	= 2000.0f;
+			it.r() = initPos.x;
+			it.g() = initPos.y;
+			it.b() = initPos.z;
+			it.a() = initMass;
 		}
 	}
 	
-	gl::Texture posTexture( pos );
+	
+	gl::Texture posTexture( posSurface );
 	posTexture.bind();
 	
+	// Store the positions and masses in the fbo
+	fbo.bindFramebuffer();
 	gl::setMatricesWindow( mFboSize, false );
 	gl::setViewport( mFboBounds );
-	
-	fbo.bindFramebuffer();
-	mFboInitShader.bind();
-	mFboInitShader.uniform( "initTex", 0 );
+	mPosInitShader.bind();
+	mPosInitShader.uniform( "initTex", 0 );
 	gl::drawSolidRect( mFboBounds );
-	mFboInitShader.unbind();
+	mPosInitShader.unbind();
 	fbo.unbindFramebuffer();
 }
 
-void RepulsionApp::setFboVelocities( gl::Fbo &fbo )
+void GpuPhysicsApp::setInitVelocities( gl::Fbo &fbo )
 {
-	Surface32f vel( fbo.getTexture() );
-	Surface32f::Iter it = vel.getIter();
+	// Give each pixel on the surface a zero value
+	// which will represent the initial velocity of each particle.
+	// The alpha value will be used to show if a collision is happening
+	// but for now, also set it to zero.
+	Surface32f velSurface( fbo.getTexture() );
+	Surface32f::Iter it = velSurface.getIter();
 	while( it.line() ){
 		while( it.pixel() ){
-			Vec3f r = Rand::randVec3f() * 0.1f;
-			it.r() = 0.0f;//r.x;
-			it.g() = 0.0f;//r.y;
-			it.b() = 0.0f;//r.z;
-			it.a() = 1.0f;
+			it.r() = 0.0f;
+			it.g() = 0.0f;
+			it.b() = 0.0f;
+			it.a() = 0.0f;
 		}
 	}
 	
-	gl::Texture velTexture( vel );
+	gl::Texture velTexture( velSurface );
 	velTexture.bind();
 	
+	// Store the velocities in the fbo
+	fbo.bindFramebuffer();
 	gl::setMatricesWindow( mFboSize, false );
 	gl::setViewport( mFboBounds );
-	
-	fbo.bindFramebuffer();
-	mFboInitShader.bind();
-	mFboInitShader.uniform( "initTex", 0 );
+	mVelInitShader.bind();
+	mVelInitShader.uniform( "initTex", 0 );
 	gl::drawSolidRect( mFboBounds );
-	mFboInitShader.unbind();
+	mVelInitShader.unbind();
 	fbo.unbindFramebuffer();
 }
 
-void RepulsionApp::mouseDown( MouseEvent event )
+void GpuPhysicsApp::keyDown( KeyEvent event )
 {
-	mMousePressed = 1.0f;
-}
-
-void RepulsionApp::mouseUp( MouseEvent event )
-{
-	mMousePressed = 0.0f;
-}
-
-void RepulsionApp::mouseDrag( MouseEvent event )
-{
-	mMousePos = event.getPos();
-}
-
-void RepulsionApp::keyDown( KeyEvent event )
-{
-	if( event.getChar() == '/' ){
-		mShowParams = !mShowParams;
-	} else if( event.getChar() == ' ' ){
-		mSaveFrames = !mSaveFrames;
-	} else if( event.getChar() == 'p' ){
-		mIsPowerOn = !mIsPowerOn;
-	} else if( event.getChar() == 'g' ){
+	if( event.getChar() == 'g' ){
 		mIsGravityOn = !mIsGravityOn;
-	} else if( event.getChar() == 'b' ){
-		mController.addBait( mRoom.getRandCeilingPos() );
+	} else if( event.getChar() == 'c' ){
+		mCharge *= -1.0f;
 	}
 }
 
-void RepulsionApp::updateTime()
+void GpuPhysicsApp::update()
 {
 	mTimePrev		= mTime;
 	mTime			= (float)app::getElapsedSeconds();
-	mTimeDelta		= mTime - mTimePrev;
-	
-	// ONLY FOR SAVING VIDEO
-	mTimeDelta		= 1.0f/60.0f;
-	//
-	
-	mTimeAdjusted	= mTimeDelta * mTimeMulti;
-	mTimer			+= mTimeAdjusted;
-}
-
-void RepulsionApp::update()
-{
-	updateTime();
-	mController.update( mRoom.getFloorLevel() );
-	
-//	if( Rand::randFloat() < 0.007f && mController.mBaits.size() < MAX_LIGHTS && mIsPowerOn ){
-//		mController.addBait( mRoom.getRandCeilingPos() );
-//	}
-	
-	
-	if( mIsPowerOn ) mMainPower -= ( mMainPower - 1.0f ) * 0.2f;
-	else			 mMainPower -= ( mMainPower - 0.0f ) * 0.2f;
+	mTimeDelta		= ( mTime - mTimePrev ) * 60.0f;
 	
 	if( mIsGravityOn ) mGravity -= ( mGravity + 0.02f ) * 0.2f;
 	else			   mGravity -= ( mGravity - 0.0f ) * 0.2f;
-	
-	mNumLights		= math<int>::min( (int)mController.mBaits.size(), MAX_LIGHTS );
-	
-	mSpringCam.update( mTimeAdjusted );
-	
-	drawToLightsSurface();
+
+	gl::disableAlphaBlending();
+	gl::disableDepthRead();
+	gl::disableDepthWrite();
 	drawIntoVelocityFbo();
 	drawIntoPositionFbo();
-	drawIntoRoomFbo();
 }
 
 
 
-void RepulsionApp::drawIntoVelocityFbo()
+void GpuPhysicsApp::drawIntoVelocityFbo()
 {
 	gl::setMatricesWindow( mFboSize, false );
 	gl::setViewport( mFboBounds );
-	gl::disableAlphaBlending();
 	
-	mVelocityFbos[ mThisFbo ].bindFramebuffer();
-	gl::clear( ColorA( 0, 0, 0, 0 ) );
-	
-	mPositionFbos[ mPrevFbo ].bindTexture( 0 );
-	mVelocityFbos[ mPrevFbo ].bindTexture( 1 );
+	mVelocityFbos[ mThisFbo ].bindFramebuffer();	// Bind the current velocity fbo
+	mPositionFbos[ mPrevFbo ].bindTexture( 0, 0 );	// Bind the 0 target of the old position fbo
+	mVelocityFbos[ mPrevFbo ].bindTexture( 1, 0 );	// Bind the 0 target of the old velocity fbo
 
 	mVelocityShader.bind();
 	mVelocityShader.uniform( "position", 0 );
 	mVelocityShader.uniform( "velocity", 1 );
-	mVelocityShader.uniform( "mousePos", ( mMousePos - getWindowCenter() ) / getWindowCenter() );
-	mVelocityShader.uniform( "mousePressed", mMousePressed );
-	mVelocityShader.uniform( "zoneRadius", mZoneRadius );
-	mVelocityShader.uniform( "zoneRadiusSqrd", mZoneRadius * mZoneRadius );
-	mVelocityShader.uniform( "minSpeed", mMinSpeed );
-	mVelocityShader.uniform( "maxSpeed", mMaxSpeed );
-	mVelocityShader.uniform( "roomBounds", mRoom.getBounds() );
-	mVelocityShader.uniform( "w", FBO_WIDTH );
-	mVelocityShader.uniform( "h", FBO_HEIGHT );
+	mVelocityShader.uniform( "fboWidth", FBO_WIDTH );
+	mVelocityShader.uniform( "fboHeight", FBO_HEIGHT );
 	mVelocityShader.uniform( "invWidth", 1.0f/(float)FBO_WIDTH );
 	mVelocityShader.uniform( "invHeight", 1.0f/(float)FBO_HEIGHT );
-	mVelocityShader.uniform( "timeDelta", mTimeAdjusted );
-	mVelocityShader.uniform( "mainPower", mMainPower );
+	mVelocityShader.uniform( "dt", mTimeDelta );
 	mVelocityShader.uniform( "gravity", mGravity );
+	mVelocityShader.uniform( "charge", mCharge );
 	gl::drawSolidRect( mFboBounds );
 	mVelocityShader.unbind();
 	
 	mVelocityFbos[ mThisFbo ].unbindFramebuffer();
 }
 
-void RepulsionApp::drawIntoPositionFbo()
+void GpuPhysicsApp::drawIntoPositionFbo()
 {	
 	gl::setMatricesWindow( mFboSize, false );
 	gl::setViewport( mFboBounds );
 	
-	mPositionFbos[ mThisFbo ].bindFramebuffer();
-	mPositionFbos[ mPrevFbo ].bindTexture( 0, 0 );
-	mPositionFbos[ mPrevFbo ].bindTexture( 1, 1 );
-	mVelocityFbos[ mThisFbo ].bindTexture( 2, 0 );
-	mVelocityFbos[ mThisFbo ].bindTexture( 3, 1 );	
+	mPositionFbos[ mThisFbo ].bindFramebuffer();	// Bind the current position fbo
+	mPositionFbos[ mPrevFbo ].bindTexture( 0, 0 );	// Bind the 0 target of the old position fbo
+	mPositionFbos[ mPrevFbo ].bindTexture( 1, 1 );	// Bind the 1 target of the old position fbo
+	mVelocityFbos[ mThisFbo ].bindTexture( 2, 0 );	// Bind the 0 target of the new velocity fbo
+	mVelocityFbos[ mThisFbo ].bindTexture( 3, 1 );	// Bind the 1 target of the new velocity fbo
 	mPositionShader.bind();
 	mPositionShader.uniform( "pos0Tex", 0 );
 	mPositionShader.uniform( "pos1Tex", 1 );
 	mPositionShader.uniform( "vel0Tex", 2 );
 	mPositionShader.uniform( "vel1Tex", 3 );
-	mPositionShader.uniform( "timeDelta", mTimeAdjusted );
+	mPositionShader.uniform( "dt", mTimeDelta );
 	gl::drawSolidRect( mFboBounds );
 	mPositionShader.unbind();
 	
 	mPositionFbos[ mThisFbo ].unbindFramebuffer();
 }
 
-void RepulsionApp::drawIntoRoomFbo()
-{
-	mRoomFbo.bindFramebuffer();
-	gl::clear( ColorA( 0.0f, 0.0f, 0.0f, 0.0f ), true );
-	
-	gl::setMatricesWindow( mRoomFboSize, false );
-	gl::setViewport( mRoomFboBounds );
-	gl::disableAlphaBlending();
-	gl::enable( GL_TEXTURE_2D );
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-	Matrix44f m;
-	m.setToIdentity();
-	m.scale( mRoom.getBounds() );
-	
-	mRoomShader.bind();
-	mRoomShader.uniform( "mvpMatrix", mSpringCam.mMvpMatrix );
-	mRoomShader.uniform( "mMatrix", m );
-	mRoomShader.uniform( "eyePos", mSpringCam.mEye );
-	mRoomShader.uniform( "roomDim", mRoom.getBounds() );
-	mRoomShader.uniform( "mainPower", mMainPower );
-	mRoom.draw();
-	mRoomShader.unbind();
-	
-	mRoomFbo.unbindFramebuffer();
-	glDisable( GL_CULL_FACE );
-}
 
-void RepulsionApp::draw()
+void GpuPhysicsApp::draw()
 {
-	// clear out the window with black
-	gl::clear( ColorA( 0.1f, 0.1f, 0.1f, 0.0f ), true );
+	gl::clear( ColorA( 0.5f, 0.5f, 0.5f, 0.0f ), true );
 	
-	gl::setMatricesWindow( getWindowSize(), false );
+	gl::setMatrices( mCam );
 	gl::setViewport( getWindowBounds() );
-
-	gl::disableDepthRead();
-	gl::disableDepthWrite();
+	
 	gl::enable( GL_TEXTURE_2D );
+	gl::enableDepthRead();
+	gl::enableDepthWrite();
 	gl::enableAlphaBlending();
 	
 	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	
-	// DRAW ROOM
-	mRoomFbo.bindTexture();
-	gl::drawSolidRect( getWindowBounds() );
-	
-	gl::enableDepthRead();
-	gl::setMatrices( mSpringCam.getCam() );
-	
-	
-	// DRAW PANEL
-	gl::color( ColorA( mMainPower, mMainPower, mMainPower, mMainPower * 0.1f + 0.9f ) );
-	mRoomPanelTex.bind();
-	mRoom.drawPanel( mRoomPanelTex );
-	
-	gl::enableDepthWrite();
 	
 	// DRAW PARTICLES
 	mPositionFbos[mThisFbo].bindTexture( 0 );
 	mVelocityFbos[mThisFbo].bindTexture( 1 );
 	mShader.bind();
-	mShader.uniform( "currentPosition", 0 );
-	mShader.uniform( "currentVelocity", 1 );
-	mShader.uniform( "eyePos", mSpringCam.mEye );
-	mShader.uniform( "mainPower", mMainPower );
+	mShader.uniform( "positions", 0 );
+	mShader.uniform( "velocities", 1 );
 	gl::draw( mSphereVbo );
 	mShader.unbind();
-	
-	gl::disableDepthWrite();
-	gl::enableAdditiveBlending();
-	gl::color( Color( 1.0f, 1.0f, 1.0f ) );
-	mGlowTex.bind();
-	mController.drawBaitGlows();
-	
-//	gl::enableDepthWrite();
-//	gl::enableAlphaBlending();
-//	gl::disable( GL_TEXTURE_2D );
-//	gl::color( Color( 1.0f, 1.0f, 1.0f ) );
-//	mController.drawBaits();
-	
-	
-	gl::disableDepthRead();
-	gl::disableDepthWrite();
-	gl::disableAlphaBlending();
-	
-	
-	if( mSaveFrames && mNumFrames < 15000 ){
-		writeImage( getHomeDirectory() + "GpuPhysics/" + toString( mNumFrames ) + ".png", copyWindowSurface() );
-		mNumFrames ++;
-	}
-	
 	
 	if( getElapsedFrames()%60 == 0 ){
 		std::cout << "FPS = " << getAverageFps() << std::endl;
 	}
 	
-	// DRAW PARAMS WINDOW
-	if( mShowParams ){
-		gl::setMatricesWindow( getWindowSize() );
-//		gl::draw( mVelocityFbos[mThisFbo].getTexture(), Vec2f( 220.0f, 500.0f ) );
-		gl::draw( mPositionFbos[mThisFbo].getTexture(), Vec2f( 392, 443.0f ) );
-		params::InterfaceGl::draw();
-	}
-	
+	// Ping-pong the Fbo index
 	mThisFbo	= ( mThisFbo + 1 ) % 2;
 	mPrevFbo	= ( mThisFbo + 1 ) % 2;
 }
 
-void RepulsionApp::drawToLightsSurface()
-{
-	Surface32f::Iter iter = mLightsSurface.getIter();
-	while( iter.line() ) {
-		while( iter.pixel() ) {
-			int index = iter.x();
-			
-			if( iter.y() == 0 ){ // set light position
-				if( index < (int)mController.mBaits.size() ){
-					iter.r() = mController.mBaits[index].mPos.x;
-					iter.g() = mController.mBaits[index].mPos.y;
-					iter.b() = mController.mBaits[index].mPos.z;
-				} else { // if the light shouldnt exist, put it way out there
-					iter.r() = 0.0f;
-					iter.g() = 0.0f;
-					iter.b() = 0.0f;
-				}
-			} else {	// set light color
-				if( index < (int)mController.mBaits.size() ){
-					float radius = mController.mBaits[index].mRadius;
-					iter.r() = mController.mBaits[index].mColor.r * radius;
-					iter.g() = mController.mBaits[index].mColor.g * radius;
-					iter.b() = mController.mBaits[index].mColor.b * radius;
-				} else { 
-					iter.r() = 0.0f;
-					iter.g() = 0.0f;
-					iter.b() = 0.0f;
-				}
-			}
-		}
-	}
-	
-	mLightsTex = gl::Texture( mLightsSurface );
-}
 
 
-CINDER_APP_BASIC( RepulsionApp, RendererGl )
+
+CINDER_APP_BASIC( GpuPhysicsApp, RendererGl )
